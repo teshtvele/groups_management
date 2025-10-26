@@ -1,0 +1,99 @@
+{% extends 'persons/base.html' %}
+
+{% block title %}Главная - Управление людьми{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">Система управления людьми с персистентностью</h1>
+        
+        <div class="alert alert-info">
+            <h4>Возможности системы:</h4>
+            <ul>
+                <li><strong>Валидация данных:</strong> проверка корректности фамилии, имени, отчества, телефона, email</li>
+                <li><strong>Дедубликация:</strong> автоматическое объединение записей в группы по правилам</li>
+                <li><strong>Персистентность:</strong> возможность просмотра состояния на любой момент времени</li>
+                <li><strong>REST API:</strong> полный набор endpoints для работы с данными</li>
+            </ul>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Добавить человека</h5>
+                        <p class="card-text">Создать новую запись с автоматической дедубликацией</p>
+                        <a href="/create/" class="btn btn-primary">Добавить</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Список людей</h5>
+                        <p class="card-text">Просмотр всех текущих записей в системе</p>
+                        <a href="/list/" class="btn btn-secondary">Просмотреть</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">API документация</h5>
+                        <p class="card-text">REST API endpoints для интеграции</p>
+                        <button class="btn btn-info" onclick="showApiDocs()">Показать</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="api-docs" class="mt-4" style="display: none;">
+            <h3>API Endpoints:</h3>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Метод</th>
+                            <th>URL</th>
+                            <th>Описание</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>POST</td>
+                            <td>/api/persons/</td>
+                            <td>Создание нового человека</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/api/persons/list/</td>
+                            <td>Получение списка всех людей</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/api/persons/search/</td>
+                            <td>Поиск в витрине</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/api/persons/{group_id}/as-of/</td>
+                            <td>Состояние на момент времени</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showApiDocs() {
+    const docs = document.getElementById('api-docs');
+    docs.style.display = docs.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+{% endblock %}
