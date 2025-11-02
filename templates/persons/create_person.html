@@ -57,8 +57,16 @@
             
             <div class="mb-3">
                 <label for="address" class="form-label">Адрес *</label>
-                <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
-                <div class="form-text">Непустая строка</div>
+                <div class="position-relative">
+                    <textarea class="form-control" id="address" name="address" rows="3" required 
+                              placeholder="Начните вводить адрес для получения подсказок..."
+                              autocomplete="off"></textarea>
+                    <div id="address-suggestions" class="position-absolute w-100 bg-white border border-top-0 d-none" 
+                         style="z-index: 1000; max-height: 200px; overflow-y: auto;"></div>
+                </div>
+                <div class="form-text">
+                    Начните вводить адрес - система предложит варианты автозаполнения от DaData
+                </div>
             </div>
             
             <div class="row">
@@ -142,6 +150,113 @@ function showAlert(type, message) {
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     `;
+}
+
+// Автозаполнение адреса через DaData
+let addressTimeout;
+const addressInput = document.getElementById('address');
+const suggestionsDiv = document.getElementById('address-suggestions');
+
+addressInput.addEventListener('input', function() {
+    const query = this.value.trim();
+    
+    clearTimeout(addressTimeout);
+    
+    if (query.length < 3) {
+        hideSuggestions();
+        return;
+    }
+    
+    addressTimeout = setTimeout(async () => {
+        try {
+            const response = await fetch(`/api/address/suggestions/?query=${encodeURIComponent(query)}&count=5`);
+            const data = await response.json();
+            
+            if (data.success && data.suggestions.length > 0) {
+                showSuggestions(data.suggestions);
+            } else {
+                hideSuggestions();
+            }
+        } catch (error) {
+            console.error('Ошибка при получении подсказок адреса:', error);
+            hideSuggestions();
+        }
+    }, 300); // Задержка 300мс перед запросом
+});
+
+function showSuggestions(suggestions) {
+    let html = '';
+    suggestions.forEach((suggestion, index) => {
+        html += `
+            <div class="suggestion-item p-2 border-bottom cursor-pointer" 
+                 data-address="${suggestion.value}"
+                 onmouseover="this.style.backgroundColor='#f8f9fa'"
+                 onmouseout="this.style.backgroundColor='white'"
+                 onclick="selectAddress('${suggestion.value.replace(/'/g, "\\'")}')">
+                <div class="fw-bold">${suggestion.value}</div>
+                ${suggestion.data.postal_code ? `<small class="text-muted">Индекс: ${suggestion.data.postal_code}</small>` : ''}
+            </div>
+        `;
+    });
+    
+    suggestionsDiv.innerHTML = html;
+    suggestionsDiv.classList.remove('d-none');
+}
+
+function selectAddress(address) {
+    addressInput.value = address;
+    hideSuggestions();
+}
+
+function hideSuggestions() {
+    suggestionsDiv.classList.add('d-none');
+}
+
+// Скрытие подсказок при клике вне поля
+document.addEventListener('click', function(e) {
+    if (!addressInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+        hideSuggestions();
+    }
+});
+
+// Навигация по подсказкам клавишами
+addressInput.addEventListener('keydown', function(e) {
+    const items = suggestionsDiv.querySelectorAll('.suggestion-item');
+    if (items.length === 0) return;
+    
+    let activeIndex = -1;
+    items.forEach((item, index) => {
+        if (item.style.backgroundColor === 'rgb(13, 110, 253)') {
+            activeIndex = index;
+        }
+    });
+    
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIndex = (activeIndex + 1) % items.length;
+        highlightItem(items, activeIndex);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIndex = activeIndex <= 0 ? items.length - 1 : activeIndex - 1;
+        highlightItem(items, activeIndex);
+    } else if (e.key === 'Enter' && activeIndex >= 0) {
+        e.preventDefault();
+        selectAddress(items[activeIndex].dataset.address);
+    } else if (e.key === 'Escape') {
+        hideSuggestions();
+    }
+});
+
+function highlightItem(items, activeIndex) {
+    items.forEach((item, index) => {
+        if (index === activeIndex) {
+            item.style.backgroundColor = '#0d6efd';
+            item.style.color = 'white';
+        } else {
+            item.style.backgroundColor = 'white';
+            item.style.color = 'black';
+        }
+    });
 }
 </script>
 {% endblock %}

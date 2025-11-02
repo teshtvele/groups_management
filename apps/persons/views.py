@@ -11,6 +11,7 @@ import json
 from .models import Person
 from .serializers import PersonSerializer, PersonSearchSerializer, PersonVitrineSerializer
 from .services import PersonService
+from .dadata_service import DaDataService
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -175,3 +176,115 @@ def list_persons_view(request):
         return render(request, 'persons/list_persons.html', {'persons': persons})
     except Exception as e:
         return render(request, 'persons/error.html', {'error': str(e)})
+
+
+@api_view(['GET'])
+def api_address_suggestions(request):
+    """API endpoint для получения подсказок адресов через DaData"""
+    query = request.GET.get('query', '').strip()
+    count = int(request.GET.get('count', 5))
+    
+    if not query or len(query) < 3:
+        return Response({
+            'success': False,
+            'error': 'Запрос должен содержать минимум 3 символа'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        dadata_service = DaDataService()
+        suggestions = dadata_service.suggest_addresses(query, count)
+        
+        return Response({
+            'success': True,
+            'query': query,
+            'count': len(suggestions),
+            'suggestions': suggestions
+        })
+    except ValueError as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': f'Ошибка DaData API: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def api_clean_address(request):
+    """API endpoint для стандартизации адреса через DaData"""
+    address = request.data.get('address', '').strip()
+    
+    if not address or len(address) < 3:
+        return Response({
+            'success': False,
+            'error': 'Адрес должен содержать минимум 3 символа'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        dadata_service = DaDataService()
+        cleaned = dadata_service.clean_address(address)
+        
+        if cleaned:
+            return Response({
+                'success': True,
+                'original': address,
+                'cleaned': cleaned
+            })
+        else:
+            return Response({
+                'success': False,
+                'error': 'Не удалось распознать адрес'
+            }, status=status.HTTP_404_NOT_FOUND)
+            
+    except ValueError as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': f'Ошибка DaData API: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def api_geocode_address(request):
+    """API endpoint для получения координат по адресу"""
+    address = request.GET.get('address', '').strip()
+    
+    if not address:
+        return Response({
+            'success': False,
+            'error': 'Необходимо указать адрес'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        dadata_service = DaDataService()
+        coords = dadata_service.geolocate_by_address(address)
+        
+        if coords:
+            return Response({
+                'success': True,
+                'address': address,
+                'coordinates': coords
+            })
+        else:
+            return Response({
+                'success': False,
+                'error': 'Не удалось определить координаты для указанного адреса'
+            }, status=status.HTTP_404_NOT_FOUND)
+            
+    except ValueError as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': f'Ошибка DaData API: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

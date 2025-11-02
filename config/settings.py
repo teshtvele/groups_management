@@ -143,3 +143,7 @@ LOGGING = {
         'handlers': ['file'],
     },
 }
+
+# DaData API настройки
+DADATA_TOKEN = config('DADATA_TOKEN', default='')
+DADATA_SECRET = config('DADATA_SECRET', default='')

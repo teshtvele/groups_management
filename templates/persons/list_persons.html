@@ -34,8 +34,12 @@
                     
                     <div class="col-md-2">
                         <label for="address" class="form-label">Адрес</label>
-                        <input type="text" class="form-control" id="address" name="address" 
-                               placeholder="Москва...">
+                        <div class="position-relative">
+                            <input type="text" class="form-control" id="address" name="address" 
+                                   placeholder="Москва..." autocomplete="off">
+                            <div id="search-address-suggestions" class="position-absolute w-100 bg-white border border-top-0 d-none" 
+                                 style="z-index: 1000; max-height: 150px; overflow-y: auto;"></div>
+                        </div>
                     </div>
                     
                     <div class="col-md-2">
@@ -292,6 +296,74 @@
         }
         resultsInfo.textContent = 'Ошибка при поиске';
         resultsInfo.className = 'ms-3 text-danger';
+    }
+
+    // Автозаполнение адреса в форме поиска
+    let searchAddressTimeout;
+    const searchAddressInput = document.getElementById('address');
+    const searchSuggestionsDiv = document.getElementById('search-address-suggestions');
+
+    if (searchAddressInput) {
+        searchAddressInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            clearTimeout(searchAddressTimeout);
+            
+            if (query.length < 3) {
+                hideSearchSuggestions();
+                return;
+            }
+            
+            searchAddressTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/api/address/suggestions/?query=${encodeURIComponent(query)}&count=5`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.suggestions.length > 0) {
+                        showSearchSuggestions(data.suggestions);
+                    } else {
+                        hideSearchSuggestions();
+                    }
+                } catch (error) {
+                    console.error('Ошибка при получении подсказок адреса:', error);
+                    hideSearchSuggestions();
+                }
+            }, 300);
+        });
+
+        // Скрытие подсказок при клике вне поля
+        document.addEventListener('click', function(e) {
+            if (!searchAddressInput.contains(e.target) && !searchSuggestionsDiv.contains(e.target)) {
+                hideSearchSuggestions();
+            }
+        });
+    }
+
+    function showSearchSuggestions(suggestions) {
+        let html = '';
+        suggestions.forEach((suggestion) => {
+            html += `
+                <div class="search-suggestion-item p-2 border-bottom cursor-pointer" 
+                     style="cursor: pointer;"
+                     onmouseover="this.style.backgroundColor='#f8f9fa'"
+                     onmouseout="this.style.backgroundColor='white'"
+                     onclick="selectSearchAddress('${suggestion.value.replace(/'/g, "\\'")}')">
+                    <div>${suggestion.value}</div>
+                </div>
+            `;
+        });
+        
+        searchSuggestionsDiv.innerHTML = html;
+        searchSuggestionsDiv.classList.remove('d-none');
+    }
+
+    function selectSearchAddress(address) {
+        searchAddressInput.value = address;
+        hideSearchSuggestions();
+    }
+
+    function hideSearchSuggestions() {
+        searchSuggestionsDiv.classList.add('d-none');
     }
 </script>
 {% endblock %}

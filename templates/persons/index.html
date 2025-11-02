@@ -11,6 +11,7 @@
             <h4>Возможности системы:</h4>
             <ul>
                 <li><strong>Валидация данных:</strong> проверка корректности фамилии, имени, отчества, телефона, email</li>
+                <li><strong>Автозаполнение адресов:</strong> интеграция с DaData для подсказок и стандартизации адресов</li>
                 <li><strong>Дедубликация:</strong> автоматическое объединение записей в группы по правилам</li>
                 <li><strong>Персистентность:</strong> возможность просмотра состояния на любой момент времени</li>
                 <li><strong>REST API:</strong> полный набор endpoints для работы с данными</li>
@@ -95,6 +96,27 @@
                             <td>/api/persons/{group_id}/as-of/</td>
                             <td>Состояние человека на момент времени</td>
                             <td>timestamp (ISO 8601)</td>
+                        </tr>
+                        <tr class="table-secondary">
+                            <td colspan="4"><strong>API для работы с адресами (DaData)</strong></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-success">GET</span></td>
+                            <td>/api/address/suggestions/</td>
+                            <td>Подсказки адресов при вводе</td>
+                            <td>query (строка поиска), count (количество)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-primary">POST</span></td>
+                            <td>/api/address/clean/</td>
+                            <td>Стандартизация и проверка адреса</td>
+                            <td>JSON: address</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-info">GET</span></td>
+                            <td>/api/address/geocode/</td>
+                            <td>Получение координат по адресу</td>
+                            <td>address (строка адреса)</td>
                         </tr>
                     </tbody>
                 </table>
