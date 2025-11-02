@@ -82,7 +82,7 @@ class Person(models.Model):
             
         # Валидация телефона (если указан)
         if self.phone and not self._validate_phone(self.phone):
-            errors['phone'] = 'Телефон должен быть в формате +7(XXX)XXX-XX-XX'
+            errors['phone'] = 'Телефон должен быть в формате +7(XXX)XXX-XX-XX, где X - любая цифра'
             
         # Валидация email (если указан)
         if self.email and not self._validate_email(self.email):
@@ -102,13 +102,46 @@ class Person(models.Model):
         return bool(re.match(r'^[А-ЯЁ][а-яё-]{1,}$', name))
 
     def _validate_phone(self, phone):
-        """Валидация телефона"""
-        return bool(re.match(r'^\+7\(\d{3}\)\d{3}-\d{2}-\d{2}$', phone))
+        """Валидация и нормализация телефона в формат +7(XXX)XXX-XX-XX"""
+        if not phone:
+            return True
+        
+        # Убираем все символы кроме цифр
+        digits_only = re.sub(r'[^\d]', '', phone.strip())
+        
+        # Если номер начинается с 8, заменяем на 7
+        if digits_only.startswith('8') and len(digits_only) == 11:
+            digits_only = '7' + digits_only[1:]
+        
+        # Проверяем, что у нас российский номер (11 цифр, начинается с 7)
+        if len(digits_only) == 11 and digits_only.startswith('7'):
+            # Форматируем в +7(XXX)XXX-XX-XX
+            formatted_phone = f"+7({digits_only[1:4]}){digits_only[4:7]}-{digits_only[7:9]}-{digits_only[9:11]}"
+            # Сохраняем отформатированный номер обратно в объект
+            self.phone = formatted_phone
+            return True
+        
+        # Если номер уже в правильном формате
+        phone_pattern = r'^\+7\(\d{3}\)\d{3}-\d{2}-\d{2}$'
+        if re.match(phone_pattern, phone):
+            return True
+        
+        # Если не удалось преобразовать, возвращаем False
+        return False
 
     def _validate_email(self, email):
         """Валидация email"""
         pattern = r'^[A-Za-z0-9]{3,}([._][A-Za-z0-9]+)*@[A-Za-z0-9]{3,}([.-][A-Za-z0-9]+)*$'
         return bool(re.match(pattern, email))
+
+        
+
+    def save(self, *args, **kwargs):
+        """Переопределяем save для форматирования телефона перед сохранением"""
+        # Форматируем телефон перед сохранением
+        if self.phone:
+            self._validate_phone(self.phone)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.last_name} {self.first_name} {self.middle_name or ''}".strip()
