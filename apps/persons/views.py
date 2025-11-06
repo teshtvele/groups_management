@@ -4,6 +4,8 @@ from django.views import View
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
+from .dadata_service import DaDataService 
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
@@ -162,6 +164,52 @@ def api_person_as_of(request, group_id):
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET'])
+def api_address_suggestions(request):
+    query = request.GET.get('query', '').strip()
+    count = int(request.GET.get('count', 5))
+    if not query or len(query) < 3:
+        return Response({'success': False, 'error': 'Запрос должен содержать минимум 3 символа'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        dadata = DaDataService()
+        suggestions = dadata.suggest_addresses(query, count)
+        return Response({'success': True, 'query': query, 'count': len(suggestions), 'suggestions': suggestions})
+    except ValueError as e:
+        return Response({'success': False, 'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    except Exception as e:
+        return Response({'success': False, 'error': f'Ошибка DaData API: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def api_clean_address(request):
+    address = request.data.get('address', '').strip()
+    if not address or len(address) < 3:
+        return Response({'success': False, 'error': 'Адрес должен содержать минимум 3 символа'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        dadata = DaDataService()
+        cleaned = dadata.clean_address(address)
+        if cleaned:
+            return Response({'success': True, 'original': address, 'cleaned': cleaned})
+        return Response({'success': False, 'error': 'Не удалось распознать адрес'}, status=status.HTTP_404_NOT_FOUND)
+    except ValueError as e:
+        return Response({'success': False, 'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    except Exception as e:
+        return Response({'success': False, 'error': f'Ошибка DaData API: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def api_geocode_address(request):
+    address = request.GET.get('address', '').strip()
+    if not address:
+        return Response({'success': False, 'error': 'Необходимо указать адрес'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        dadata = DaDataService()
+        coords = dadata.geolocate_by_address(address)
+        if coords:
+            return Response({'success': True, 'address': address, 'coordinates': coords})
+        return Response({'success': False, 'error': 'Не удалось определить координаты'}, status=status.HTTP_404_NOT_FOUND)
+    except ValueError as e:
+        return Response({'success': False, 'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    except Exception as e:
+        return Response({'success': False, 'error': f'Ошибка DaData API: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @csrf_exempt
 def api_group_history_simple(request, group_id):
@@ -317,52 +365,6 @@ def api_group_at_time(request, group_id):
         return JsonResponse({'error': f'Invalid timestamp format: {e}'}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-
-
-@csrf_exempt
-def api_address_suggestions(request):
-    """API endpoint для получения подсказок адресов (заглушка)"""
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Only POST method allowed'}, status=405)
-    
-    try:
-        return JsonResponse({
-            'success': True,
-            'suggestions': []  # Заглушка - пока не реализовано
-        })
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-
-@csrf_exempt
-def api_clean_address(request):
-    """API endpoint для очистки адреса (заглушка)"""
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Only POST method allowed'}, status=405)
-    
-    try:
-        return JsonResponse({
-            'success': True,
-            'result': None  # Заглушка - пока не реализовано
-        })
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-
-@csrf_exempt
-def api_geocode_address(request):
-    """API endpoint для геокодирования адреса (заглушка)"""
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Only POST method allowed'}, status=405)
-    
-    try:
-        return JsonResponse({
-            'success': True,
-            'result': None  # Заглушка - пока не реализовано
-        })
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
 
 def index_view(request):
     """Главная страница"""
