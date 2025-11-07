@@ -6,7 +6,7 @@ from typing import Optional, List, Dict, Any
 
 
 class PersonService:
-    """Сервис для работы с людьми и дедубликацией"""
+    """Сервис для работы с людьми и дедупликацией"""
 
     @staticmethod
     def create_change_set(author: str = None, reason: str = None) -> ChangeSet:
@@ -58,7 +58,7 @@ class PersonService:
     @staticmethod
     @transaction.atomic
     def create_person(person_data: Dict[str, Any], change_set: ChangeSet = None) -> Person:
-        """Создание нового человека с дедубликацией"""
+        """Создание нового человека с дедупликацией"""
         if not change_set:
             change_set = PersonService.create_change_set(
                 author='system',
@@ -123,24 +123,23 @@ class PersonService:
         """Поиск в витрине с частичным совпадением (все записи актуальны)"""
         qs = Person.objects.all()
 
-        # Поиск по частичным данным:
-        # i. фамилия
+        # фамилия
         if search_params.get('last_name'):
             qs = qs.filter(last_name__icontains=search_params['last_name'])
         
-        # ii. фамилия и имя (если указаны оба)
+        # фамилия и имя (если указаны оба)
         if search_params.get('first_name'):
             qs = qs.filter(first_name__icontains=search_params['first_name'])
         
-        # iii. ФИО (отчество, если указано)
+        # фио
         if search_params.get('middle_name') is not None and search_params.get('middle_name') != '':
             qs = qs.filter(middle_name__icontains=search_params['middle_name'])
         
-        # iv. адрес
+        # адрес
         if search_params.get('address'):
             qs = qs.filter(address__icontains=search_params['address'])
         
-        # v. номер телефона (точное совпадение, так как формат стандартизирован)
+        # номер телефона (точное совпадение, так как формат стандартизирован)
         if search_params.get('phone'):
             # Нормализуем введенный телефон для поиска
             search_phone = search_params['phone']
@@ -159,14 +158,14 @@ class PersonService:
                     # Если не удалось нормализовать, ищем как есть
                     qs = qs.filter(phone__icontains=search_phone)
         
-        # vi. адрес электронной почты
+        # адрес электронной почты
         if search_params.get('email'):
             qs = qs.filter(email__icontains=search_params['email'])
 
         limit = search_params.get('limit', 100)
         offset = search_params.get('offset', 0)
 
-        # Дедубликация: группируем по group_id и берем одну запись на группу
+        # Дедупликация: группируем по group_id и берем одну запись на группу
         qs = qs.order_by('group_id')[offset:offset + limit]
 
         return [

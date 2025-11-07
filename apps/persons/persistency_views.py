@@ -13,12 +13,12 @@ from .models import Person, PersonGroup
 @method_decorator(csrf_exempt, name='dispatch')
 class PersistencyAPIView(View):
     """
-    Base view for persistency API endpoints.
+    Базовый класс для API endpoints персистентности.
     """
     
     def dispatch(self, request, *args, **kwargs):
         """
-        Handle CORS and common response formatting.
+        Обработка CORS и общее форматирование ответов.
         """
         response = super().dispatch(request, *args, **kwargs)
         if hasattr(response, 'headers'):
@@ -29,7 +29,7 @@ class PersistencyAPIView(View):
     
     def options(self, request, *args, **kwargs):
         """
-        Handle CORS preflight requests.
+        Обработка CORS preflight запросов.
         """
         response = JsonResponse({})
         response.headers['Access-Control-Allow-Origin'] = '*'
@@ -40,7 +40,7 @@ class PersistencyAPIView(View):
 
 class GroupHistoryView(PersistencyAPIView):
     """
-    API endpoint for getting group history.
+    API endpoint для получения истории группы.
     GET /api/persistency/groups/<group_name>/history/
     """
     
@@ -67,7 +67,7 @@ class GroupHistoryView(PersistencyAPIView):
 
 class GroupAtTimeView(PersistencyAPIView):
     """
-    API endpoint for getting group composition at a specific time.
+    API endpoint для получения состава группы на определенное время.
     GET /api/persistency/groups/<group_name>/at-time/?timestamp=<iso_timestamp>
     """
     
@@ -80,7 +80,6 @@ class GroupAtTimeView(PersistencyAPIView):
                     'error': 'timestamp parameter is required'
                 }, status=400)
             
-            # Parse ISO timestamp
             timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
             
             members = PersistencyService.get_group_at_time(group_name, timestamp)
@@ -91,7 +90,6 @@ class GroupAtTimeView(PersistencyAPIView):
                     'error': f'Group {group_name} not found'
                 }, status=404)
             
-            # Convert Person objects to JSON
             members_data = [
                 {
                     'id': person.id,
@@ -125,7 +123,7 @@ class GroupAtTimeView(PersistencyAPIView):
 
 class ChangesetListView(PersistencyAPIView):
     """
-    API endpoint for getting all changesets.
+    API endpoint для получения всех наборов изменений.
     GET /api/persistency/changesets/
     """
     
@@ -151,7 +149,7 @@ class ChangesetListView(PersistencyAPIView):
 
 class ChangesetDetailView(PersistencyAPIView):
     """
-    API endpoint for getting changeset details.
+    API endpoint для получения деталей набора изменений.
     GET /api/persistency/changesets/<changeset_id>/
     """
     
@@ -179,20 +177,20 @@ class ChangesetDetailView(PersistencyAPIView):
 
 class GroupManagementView(PersistencyAPIView):
     """
-    API endpoint for managing group membership.
+    API endpoint для управления составом группы.
     POST /api/persistency/groups/<group_name>/members/
     DELETE /api/persistency/groups/<group_name>/members/<person_id>/
     """
     
     def post(self, request, group_name):
         """
-        Add a person to a group.
+        Добавить человека в группу.
         """
         try:
             data = json.loads(request.body)
             person_id = data.get('person_id')
             description = data.get('description', '')
-            author = data.get('author', 'API User')
+            author = data.get('author', 'Пользователь API')
             
             if not person_id:
                 return JsonResponse({
@@ -239,12 +237,12 @@ class GroupManagementView(PersistencyAPIView):
     
     def delete(self, request, group_name, person_id):
         """
-        Remove a person from a group.
+        Удалить человека из группы.
         """
         try:
-            # Parse query parameters for optional data
+            # Разбираем параметры запроса для дополнительных данных
             description = request.GET.get('description', '')
-            author = request.GET.get('author', 'API User')
+            author = request.GET.get('author', 'Пользователь API')
             
             try:
                 person = Person.objects.get(id=person_id)
@@ -286,7 +284,7 @@ class GroupManagementView(PersistencyAPIView):
 
 class CompareGroupStatesView(PersistencyAPIView):
     """
-    API endpoint for comparing group states between two timestamps.
+    API endpoint для сравнения состояний группы между двумя временными точками.
     GET /api/persistency/groups/<group_name>/compare/?timestamp1=<iso>&timestamp2=<iso>
     """
     
@@ -301,7 +299,6 @@ class CompareGroupStatesView(PersistencyAPIView):
                     'error': 'Both timestamp1 and timestamp2 parameters are required'
                 }, status=400)
             
-            # Parse timestamps
             timestamp1 = datetime.fromisoformat(timestamp1_str.replace('Z', '+00:00'))
             timestamp2 = datetime.fromisoformat(timestamp2_str.replace('Z', '+00:00'))
             
@@ -331,7 +328,7 @@ class CompareGroupStatesView(PersistencyAPIView):
 
 class PersonHistoryView(PersistencyAPIView):
     """
-    API endpoint for getting person's group membership history.
+    API endpoint для получения истории участия человека в группах.
     GET /api/persistency/persons/<person_id>/history/
     """
     
@@ -354,7 +351,7 @@ class PersonHistoryView(PersistencyAPIView):
 
 class GroupHistoryByIdView(PersistencyAPIView):
     """
-    API endpoint for getting group history by ID.
+    API endpoint для получения истории группы по ID.
     GET /api/groups/<group_id>/history/
     """
     
@@ -381,7 +378,7 @@ class GroupHistoryByIdView(PersistencyAPIView):
 
 class GroupAtTimeByIdView(PersistencyAPIView):
     """
-    API endpoint for getting group composition at a specific time by ID.
+    API endpoint для получения состава группы на определенное время по ID.
     GET /api/groups/<group_id>/at-time/?timestamp=<iso_timestamp>
     """
     
@@ -394,7 +391,7 @@ class GroupAtTimeByIdView(PersistencyAPIView):
                     'error': 'timestamp parameter is required'
                 }, status=400)
             
-            # Parse ISO timestamp
+            # Разбираем временную метку в формате ISO
             timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
             
             members = PersistencyService.get_group_at_time(group_id, timestamp)
@@ -425,12 +422,12 @@ class GroupAtTimeByIdView(PersistencyAPIView):
             }, status=500)
 
 
-# Function-based views for simpler endpoints
+# Функции-представления для более простых endpoints
 @csrf_exempt
 @require_http_methods(["GET"])
 def get_groups_list(request):
     """
-    Get list of all groups.
+    Получить список всех групп.
     GET /api/persistency/groups/
     """
     try:

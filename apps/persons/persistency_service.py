@@ -6,15 +6,15 @@ from .models import ChangeSet, PersonGroup, Person, PersonHistory
 
 class PersistencyService:
     """
-    Service for implementing Git-like persistency for group composition tracking.
-    Allows viewing how groups change over time with changeset-based versioning.
+    Сервис для реализации персистентности для отслеживания состава групп.
+    Позволяет просматривать, как группы изменяются со временем с версионированием на основе наборов изменений.
     """
     
     @staticmethod
     def create_changeset(description="", author=None):
         """
-        Create a new changeset to track a group of changes.
-        Similar to a Git commit.
+        Создать новый набор изменений для отслеживания группы изменений.
+        Аналогично Git коммиту.
         """
         changeset = ChangeSet.objects.create(
             reason=description,
@@ -25,7 +25,7 @@ class PersistencyService:
     @staticmethod
     def get_group_history(group_id, limit=None):
         """
-        Get history of changes for a group by ID.
+        Получить историю изменений для группы по ID.
         """
         try:
             # Получаем историю изменений для группы
@@ -59,7 +59,7 @@ class PersistencyService:
     @staticmethod
     def get_group_at_time(group_id, timestamp):
         """
-        Get group composition at specific time.
+        Получить состав группы на определенное время.
         """
         try:
             # Находим запись в истории, которая была активна в указанное время
@@ -94,7 +94,7 @@ class PersistencyService:
     @staticmethod
     def get_all_changesets(limit=None):
         """
-        Get all changesets in the system.
+        Получить все наборы изменений в системе.
         """
         try:
             query = ChangeSet.objects.all().order_by('-authored_at')
@@ -112,7 +112,7 @@ class PersistencyService:
                     'timestamp': changeset.authored_at.isoformat(),
                     'author': changeset.author,
                     'reason': changeset.reason,
-                    'description': changeset.reason,  # Добавляем для совместимости
+                    'description': changeset.reason, 
                     'changes_count': changes_count
                 })
             
@@ -124,12 +124,11 @@ class PersistencyService:
     @staticmethod
     def get_changeset_details(changeset_id):
         """
-        Get details of a specific changeset.
+        Получить детали конкретного набора изменений.
         """
         try:
             changeset = ChangeSet.objects.get(id=changeset_id)
             
-            # Найти все записи в истории, связанные с этим changeset
             history_records = PersonHistory.objects.filter(change=changeset)
             
             details = {

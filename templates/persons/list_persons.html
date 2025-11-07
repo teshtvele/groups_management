@@ -313,7 +313,7 @@
             
             if (data.success) {
                 displaySearchResults(data.data, data.count);
-                resultsInfo.textContent = `Найдено: ${data.count} дедублицированных записей`;
+                resultsInfo.textContent = `Найдено: ${data.count} дедуплицированных записей`;
                 resultsInfo.className = 'ms-3 text-success';
             } else {
                 showError(data.errors || data.error);

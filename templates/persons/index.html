@@ -11,35 +11,34 @@
             <h4>Возможности системы:</h4>
             <ul>
                 <li><strong>Валидация данных:</strong> проверка корректности фамилии, имени, отчества, телефона, email</li>
-                <li><strong>Автозаполнение адресов:</strong> интеграция с DaData для подсказок и стандартизации адресов</li>
-                <li><strong>Дедубликация:</strong> автоматическое объединение записей в группы по правилам</li>
+                <li><strong>Дедупликация:</strong> автоматическое объединение записей в группы по правилам</li>
                 <li><strong>Персистентность:</strong> возможность просмотра состояния на любой момент времени</li>
                 <li><strong>REST API:</strong> полный набор endpoints для работы с данными</li>
             </ul>
         </div>
 
         <div class="row mt-4">
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title"> Витрина поиска</h5>
-                        <p class="card-text">Поиск с дедубликацией по частичным данным</p>
+                        <p class="card-text">Поиск с дедупликацией по частичным данным</p>
                         <a href="/list/" class="btn btn-success">Витрина</a>
                     </div>
                 </div>
             </div>
             
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">➕ Добавить человека</h5>
-                        <p class="card-text">Создать новую запись с автоматической дедубликацией</p>
+                        <p class="card-text">Создать новую запись с автоматической дедупликацией</p>
                         <a href="/create/" class="btn btn-primary">Добавить</a>
                     </div>
                 </div>
             </div>
             
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title"> API документация</h5>
@@ -50,8 +49,10 @@
             </div>
         </div>
 
-        <div id="api-docs" class="mt-4" style="display: none;">
-            <h3>API Endpoints для витрины:</h3>
+                <div id="api-docs" class="mt-4" style="display: none;">
+            <h3>API Endpoints:</h3>
+            
+            <h4 class="mt-4">Работа с людьми:</h4>
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
@@ -64,15 +65,9 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><span class="badge bg-success">GET</span></td>
-                            <td>/api/persons/search/</td>
-                            <td><strong>Витрина поиска</strong> - дедублицированная информация</td>
-                            <td>last_name, first_name, middle_name, address, phone, email, limit, offset</td>
-                        </tr>
-                        <tr>
                             <td><span class="badge bg-primary">POST</span></td>
                             <td>/api/persons/</td>
-                            <td>Создание нового человека с автодедубликацией</td>
+                            <td>Создание нового человека с автодедупликацией</td>
                             <td>JSON: last_name, first_name, birth_date, gender, address, phone?, email?</td>
                         </tr>
                         <tr>
@@ -82,14 +77,33 @@
                             <td>Нет</td>
                         </tr>
                         <tr>
+                            <td><span class="badge bg-success">GET</span></td>
+                            <td>/api/persons/search/</td>
+                            <td><strong>Витрина поиска</strong> - дедуплицированная информация</td>
+                            <td>last_name, first_name, middle_name, address, phone, email, limit, offset</td>
+                        </tr>
+                        <tr>
                             <td><span class="badge bg-warning">GET</span></td>
                             <td>/api/persons/{group_id}/as-of/</td>
                             <td>Состояние человека на момент времени</td>
                             <td>timestamp (ISO 8601)</td>
                         </tr>
-                        <tr class="table-secondary">
-                            <td colspan="4"><strong>API для работы с адресами (DaData)</strong></td>
+                    </tbody>
+                </table>
+            </div>
+
+            <h4 class="mt-4">Работа с адресами (DaData):</h4>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Метод</th>
+                            <th>URL</th>
+                            <th>Описание</th>
+                            <th>Параметры</th>
                         </tr>
+                    </thead>
+                    <tbody>
                         <tr>
                             <td><span class="badge bg-success">GET</span></td>
                             <td>/api/address/suggestions/</td>
@@ -111,10 +125,93 @@
                     </tbody>
                 </table>
             </div>
+
+            <h4 class="mt-4">Персистентность (Git-like versioning):</h4>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Метод</th>
+                            <th>URL</th>
+                            <th>Описание</th>
+                            <th>Параметры</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge bg-info">GET</span></td>
+                            <td>/api/persistency/groups/</td>
+                            <td>Список всех групп</td>
+                            <td>Нет</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-success">GET</span></td>
+                            <td>/api/persistency/groups/{group_id}/history/</td>
+                            <td>История изменений группы по ID</td>
+                            <td>limit (количество записей)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-warning">GET</span></td>
+                            <td>/api/persistency/groups/{group_id}/at-time/</td>
+                            <td>Состояние группы на момент времени по ID</td>
+                            <td>timestamp (ISO 8601)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-success">GET</span></td>
+                            <td>/api/persistency/groups/{group_name}/history/</td>
+                            <td>История изменений группы по имени</td>
+                            <td>limit (количество записей)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-warning">GET</span></td>
+                            <td>/api/persistency/groups/{group_name}/at-time/</td>
+                            <td>Состояние группы на момент времени по имени</td>
+                            <td>timestamp (ISO 8601)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-info">GET</span></td>
+                            <td>/api/persistency/groups/{group_name}/compare/</td>
+                            <td>Сравнение состояний группы</td>
+                            <td>timestamp1, timestamp2 (ISO 8601)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-primary">POST</span></td>
+                            <td>/api/persistency/groups/{group_name}/members/</td>
+                            <td>Добавление участника в группу</td>
+                            <td>JSON с данными участника</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-danger">DELETE</span></td>
+                            <td>/api/persistency/groups/{group_name}/members/{person_id}/</td>
+                            <td>Удаление участника из группы</td>
+                            <td>Нет</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-info">GET</span></td>
+                            <td>/api/persistency/changesets/</td>
+                            <td>Список всех changesets (коммитов)</td>
+                            <td>limit (количество записей)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-info">GET</span></td>
+                            <td>/api/persistency/changesets/{changeset_id}/</td>
+                            <td>Детали changeset</td>
+                            <td>Нет</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-info">GET</span></td>
+                            <td>/api/persistency/persons/{person_id}/history/</td>
+                            <td>История изменений человека</td>
+                            <td>Нет</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             
-            <h4>Примеры поиска в витрине:</h4>
+            <h4>Примеры использования:</h4>
             <div class="row">
                 <div class="col-md-6">
+                    <h5>Поиск в витрине:</h5>
                     <pre class="bg-light p-3"><code># Поиск по фамилии
 GET /api/persons/search/?last_name=Иван
 
@@ -128,14 +225,18 @@ GET /api/persons/search/?address=Москва
 GET /api/persons/search/?phone=89154233426</code></pre>
                 </div>
                 <div class="col-md-6">
-                    <pre class="bg-light p-3"><code># Поиск по email
-GET /api/persons/search/?email=@gmail.com
+                    <h5>Персистентность:</h5>
+                    <pre class="bg-light p-3"><code># История группы
+GET /api/persistency/groups/1/history/
 
-# Комбинированный поиск
-GET /api/persons/search/?last_name=Петр&address=Москва
+# Состояние на момент времени
+GET /api/persistency/groups/1/at-time/?timestamp=2025-11-06T18:40:00Z
 
-# С лимитом результатов
-GET /api/persons/search/?last_name=Иван&limit=10</code></pre>
+# Список всех коммитов
+GET /api/persistency/changesets/
+
+# История человека
+GET /api/persistency/persons/123/history/</code></pre>
                 </div>
             </div>
         </div>

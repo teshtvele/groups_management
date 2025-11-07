@@ -20,7 +20,7 @@ class ChangeSet(models.Model):
 
 
 class PersonGroup(models.Model):
-    """Группа людей (дедубликация)"""
+    """Группа людей (дедупликация)"""
     id = models.AutoField(primary_key=True)
 
     class Meta:
@@ -155,7 +155,7 @@ class PersonHistory(models.Model):
 
     class Meta:
         db_table = 'person_history'
-        managed = False  # Django не будет управлять этой таблицей
+        managed = False 
         indexes = [
             models.Index(fields=['group', 'valid_from', 'valid_to'], name='i_hist_group_from_to'),
         ]
